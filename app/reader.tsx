@@ -10,15 +10,18 @@ import {
 } from "react";
 import { DUNA_CHAPTER_ONE } from "./duna-chapter-1";
 import { DUNA_CHAPTER_TWO } from "./duna-chapter-2";
+import { DUNA_CHAPTER_THREE } from "./duna-chapter-3";
+import { DUNA_CHAPTER_FOUR } from "./duna-chapter-4";
 
 type Chapter = { id: string; title: string; content: string };
 type Book = { id: string; title: string; author: string; chapters: Chapter[] };
 type Theme = "paper" | "sepia" | "dusk";
+type ReadingPosition = { bookId: string; chapterId: string; y: number };
 
 const DUNA_BOOK: Book = {
   id: "duna-a-abdicacao",
   title: "Duna: A Abdicação",
-  author: "2 capítulos disponíveis",
+  author: "4 capítulos disponíveis",
   chapters: [
     {
       id: "o-peso-das-colheitas",
@@ -29,6 +32,16 @@ const DUNA_BOOK: Book = {
       id: "o-futuro-mais-provavel",
       title: "O Futuro Mais Provável",
       content: DUNA_CHAPTER_TWO,
+    },
+    {
+      id: "a-memoria-dos-erros",
+      title: "A Memória dos Erros",
+      content: DUNA_CHAPTER_THREE,
+    },
+    {
+      id: "a-moral-dos-numeros",
+      title: "A Moral dos Números",
+      content: DUNA_CHAPTER_FOUR,
     },
   ],
 };
@@ -172,16 +185,20 @@ export function BookReader() {
   const [fontSize, setFontSize] = useState(19);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [ready, setReady] = useState(false);
+  const [resumePosition, setResumePosition] = useState<ReadingPosition | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const stored = localStorage.getItem("margem-library");
     const preferences = localStorage.getItem("margem-preferences");
+    const savedPosition = localStorage.getItem("margem-reading-position");
     try {
+      let availableBooks = PUBLISHED_BOOKS;
       if (stored) {
         const parsed = JSON.parse(stored) as Book[];
         const importedBooks = parsed.filter((saved) => !PUBLISHED_BOOKS.some((published) => published.id === saved.id));
-        setBooks([...PUBLISHED_BOOKS, ...importedBooks]);
+        availableBooks = [...PUBLISHED_BOOKS, ...importedBooks];
+        setBooks(availableBooks);
       }
       if (preferences) {
         const parsed = JSON.parse(preferences);
@@ -189,6 +206,11 @@ export function BookReader() {
         if (parsed.fontSize) setFontSize(parsed.fontSize);
         if (parsed.bookId) setBookId(parsed.bookId);
         if (parsed.chapterId) setChapterId(parsed.chapterId);
+      }
+      if (savedPosition) {
+        const parsed = JSON.parse(savedPosition) as ReadingPosition;
+        const savedBook = availableBooks.find((item) => item.id === parsed.bookId);
+        if (parsed.y > 160 && savedBook?.chapters.some((item) => item.id === parsed.chapterId)) setResumePosition(parsed);
       }
     } catch { /* Keep the published library if saved data is invalid. */ }
     fileRef.current?.setAttribute("webkitdirectory", "");
@@ -201,15 +223,47 @@ export function BookReader() {
     localStorage.setItem("margem-preferences", JSON.stringify({ theme, fontSize, bookId, chapterId }));
   }, [books, theme, fontSize, bookId, chapterId, ready]);
 
+  useEffect(() => {
+    if (!ready) return;
+    let timer: ReturnType<typeof setTimeout>;
+    const savePosition = () => {
+      localStorage.setItem("margem-reading-position", JSON.stringify({ bookId, chapterId, y: Math.round(window.scrollY) }));
+    };
+    const onScroll = () => {
+      clearTimeout(timer);
+      timer = setTimeout(savePosition, 180);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("pagehide", savePosition);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("pagehide", savePosition);
+    };
+  }, [ready, bookId, chapterId]);
+
   const book = books.find((item) => item.id === bookId) || books[0];
   const chapterIndex = Math.max(0, book.chapters.findIndex((item) => item.id === chapterId));
   const chapter = book.chapters[chapterIndex] || book.chapters[0];
   const progress = Math.round(((chapterIndex + 1) / book.chapters.length) * 100);
 
+  const rememberCurrentPosition = () => {
+    localStorage.setItem("margem-reading-position", JSON.stringify({ bookId: book.id, chapterId: chapter.id, y: Math.round(window.scrollY) }));
+  };
+
+  const openChapter = (nextBookId: string, nextChapterId: string) => {
+    rememberCurrentPosition();
+    setBookId(nextBookId);
+    setChapterId(nextChapterId);
+    setSidebarOpen(false);
+    setResumePosition(null);
+    window.scrollTo({ top: 0, behavior: "auto" });
+  };
+
   const selectBook = (id: string) => {
     const next = books.find((item) => item.id === id);
     if (!next) return;
-    setBookId(id); setChapterId(next.chapters[0].id);
+    openChapter(id, next.chapters[0].id);
   };
 
   const importBook = async (files: FileList | null) => {
@@ -224,13 +278,24 @@ export function BookReader() {
     const id = `${slug(inferredTitle)}-${Date.now()}`;
     const next: Book = { id, title: inferredTitle.replace(/[-_]/g, " "), author: `${chapters.length} ${chapters.length === 1 ? "capítulo" : "capítulos"}`, chapters };
     setBooks((current) => [...current, next]);
-    setBookId(id); setChapterId(chapters[0].id); setSidebarOpen(false);
+    openChapter(id, chapters[0].id);
     if (fileRef.current) fileRef.current.value = "";
   };
 
   const go = (offset: number) => {
     const next = book.chapters[chapterIndex + offset];
-    if (next) { setChapterId(next.id); window.scrollTo({ top: 0, behavior: "smooth" }); }
+    if (next) openChapter(book.id, next.id);
+  };
+
+  const resumeBook = resumePosition ? books.find((item) => item.id === resumePosition.bookId) : null;
+  const resumeChapter = resumeBook?.chapters.find((item) => item.id === resumePosition?.chapterId);
+  const restoreReading = () => {
+    if (!resumePosition || !resumeBook || !resumeChapter) return;
+    const target = resumePosition.y;
+    setBookId(resumeBook.id);
+    setChapterId(resumeChapter.id);
+    setResumePosition(null);
+    requestAnimationFrame(() => requestAnimationFrame(() => window.scrollTo({ top: target, behavior: "auto" })));
   };
 
   const themes = useMemo(() => ([
@@ -268,7 +333,7 @@ export function BookReader() {
         <nav className="chapters" aria-label="Capítulos">
           <div className="chapters-heading"><span>Capítulos</span><span>{book.chapters.length}</span></div>
           {book.chapters.map((item, index) => (
-            <button key={item.id} className={item.id === chapter.id ? "active" : ""} onClick={() => { setChapterId(item.id); setSidebarOpen(false); }}>
+            <button key={item.id} className={item.id === chapter.id ? "active" : ""} onClick={() => openChapter(book.id, item.id)}>
               <span>{String(index + 1).padStart(2, "0")}</span>{item.title}
             </button>
           ))}
@@ -308,6 +373,18 @@ export function BookReader() {
           </nav>
         </div>
       </section>
+      {resumePosition && resumeBook && resumeChapter && (
+        <aside className="resume-card" aria-live="polite">
+          <div className="resume-mark">↳</div>
+          <div className="resume-copy">
+            <small>Continuar de onde parou?</small>
+            <strong>{resumeChapter.title}</strong>
+            <span>{resumeBook.title}</span>
+          </div>
+          <button className="resume-action" onClick={restoreReading}>Continuar</button>
+          <button className="resume-dismiss" onClick={() => setResumePosition(null)} aria-label="Agora não">×</button>
+        </aside>
+      )}
     </main>
   );
 }
