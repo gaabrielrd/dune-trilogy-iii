@@ -9,6 +9,7 @@ import {
   useState,
 } from "react";
 import { DUNA_CHAPTER_ONE } from "./duna-chapter-1";
+import { DUNA_CHAPTER_TWO } from "./duna-chapter-2";
 
 type Chapter = { id: string; title: string; content: string };
 type Book = { id: string; title: string; author: string; chapters: Chapter[] };
@@ -17,12 +18,17 @@ type Theme = "paper" | "sepia" | "dusk";
 const DUNA_BOOK: Book = {
   id: "duna-a-abdicacao",
   title: "Duna: A Abdicação",
-  author: "1 capítulo disponível",
+  author: "2 capítulos disponíveis",
   chapters: [
     {
       id: "o-peso-das-colheitas",
       title: "O Peso das Colheitas",
       content: DUNA_CHAPTER_ONE,
+    },
+    {
+      id: "o-futuro-mais-provavel",
+      title: "O Futuro Mais Provável",
+      content: DUNA_CHAPTER_TWO,
     },
   ],
 };
