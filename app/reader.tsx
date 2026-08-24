@@ -16,7 +16,22 @@ import { DUNA_CHAPTER_FOUR } from "./duna-chapter-4";
 type Chapter = { id: string; title: string; content: string };
 type Book = { id: string; title: string; author: string; chapters: Chapter[] };
 type Theme = "paper" | "sepia" | "dusk";
+type FontFamily = "lora" | "geist" | "georgia" | "palatino";
 type ReadingPosition = { bookId: string; chapterId: string; y: number };
+
+const FONT_OPTIONS: { id: FontFamily; label: string; detail: string }[] = [
+  { id: "lora", label: "Lora", detail: "Literária" },
+  { id: "geist", label: "Geist", detail: "Contemporânea" },
+  { id: "georgia", label: "Georgia", detail: "Clássica" },
+  { id: "palatino", label: "Palatino", detail: "Editorial" },
+];
+
+const FONT_STACKS: Record<FontFamily, string> = {
+  lora: "var(--font-serif), Georgia, serif",
+  geist: "var(--font-sans), Arial, sans-serif",
+  georgia: "Georgia, 'Times New Roman', serif",
+  palatino: "Palatino, 'Palatino Linotype', 'Book Antiqua', serif",
+};
 
 const DUNA_BOOK: Book = {
   id: "duna-a-abdicacao",
@@ -183,10 +198,17 @@ export function BookReader() {
   const [chapterId, setChapterId] = useState(DUNA_BOOK.chapters[0].id);
   const [theme, setTheme] = useState<Theme>("paper");
   const [fontSize, setFontSize] = useState(19);
+  const [fontFamily, setFontFamily] = useState<FontFamily>("lora");
+  const [lineHeight, setLineHeight] = useState(1.83);
+  const [paragraphMargin, setParagraphMargin] = useState(1.35);
+  const [sidePadding, setSidePadding] = useState(56);
+  const [letterSpacing, setLetterSpacing] = useState(0);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [ready, setReady] = useState(false);
   const [resumePosition, setResumePosition] = useState<ReadingPosition | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const settingsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const stored = localStorage.getItem("margem-library");
@@ -204,6 +226,11 @@ export function BookReader() {
         const parsed = JSON.parse(preferences);
         if (["paper", "sepia", "dusk"].includes(parsed.theme)) setTheme(parsed.theme);
         if (parsed.fontSize) setFontSize(parsed.fontSize);
+        if (["lora", "geist", "georgia", "palatino"].includes(parsed.fontFamily)) setFontFamily(parsed.fontFamily);
+        if (typeof parsed.lineHeight === "number") setLineHeight(parsed.lineHeight);
+        if (typeof parsed.paragraphMargin === "number") setParagraphMargin(parsed.paragraphMargin);
+        if (typeof parsed.sidePadding === "number") setSidePadding(parsed.sidePadding);
+        if (typeof parsed.letterSpacing === "number") setLetterSpacing(parsed.letterSpacing);
         if (parsed.bookId) setBookId(parsed.bookId);
         if (parsed.chapterId) setChapterId(parsed.chapterId);
       }
@@ -220,8 +247,24 @@ export function BookReader() {
   useEffect(() => {
     if (!ready) return;
     localStorage.setItem("margem-library", JSON.stringify(books));
-    localStorage.setItem("margem-preferences", JSON.stringify({ theme, fontSize, bookId, chapterId }));
-  }, [books, theme, fontSize, bookId, chapterId, ready]);
+    localStorage.setItem("margem-preferences", JSON.stringify({ theme, fontSize, fontFamily, lineHeight, paragraphMargin, sidePadding, letterSpacing, bookId, chapterId }));
+  }, [books, theme, fontSize, fontFamily, lineHeight, paragraphMargin, sidePadding, letterSpacing, bookId, chapterId, ready]);
+
+  useEffect(() => {
+    if (!settingsOpen) return;
+    const closeOnOutside = (event: PointerEvent) => {
+      if (!settingsRef.current?.contains(event.target as Node)) setSettingsOpen(false);
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setSettingsOpen(false);
+    };
+    window.addEventListener("pointerdown", closeOnOutside);
+    window.addEventListener("keydown", closeOnEscape);
+    return () => {
+      window.removeEventListener("pointerdown", closeOnOutside);
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [settingsOpen]);
 
   useEffect(() => {
     if (!ready) return;
@@ -298,6 +341,15 @@ export function BookReader() {
     requestAnimationFrame(() => requestAnimationFrame(() => window.scrollTo({ top: target, behavior: "auto" })));
   };
 
+  const resetTypography = () => {
+    setFontSize(19);
+    setFontFamily("lora");
+    setLineHeight(1.83);
+    setParagraphMargin(1.35);
+    setSidePadding(56);
+    setLetterSpacing(0);
+  };
+
   const themes = useMemo(() => ([
     { id: "paper" as const, label: "Claro" },
     { id: "sepia" as const, label: "Sépia" },
@@ -307,7 +359,14 @@ export function BookReader() {
   if (!book || !chapter) return null;
 
   return (
-    <main className="reader-shell" data-theme={theme} style={{ "--reader-size": `${fontSize}px` } as React.CSSProperties}>
+    <main className="reader-shell" data-theme={theme} style={{
+      "--reader-size": `${fontSize}px`,
+      "--reader-font": FONT_STACKS[fontFamily],
+      "--reader-line-height": lineHeight,
+      "--paragraph-margin": `${paragraphMargin}em`,
+      "--reader-padding": `${sidePadding}px`,
+      "--reader-letter-spacing": `${letterSpacing}em`,
+    } as React.CSSProperties}>
       <button className={`sidebar-backdrop ${sidebarOpen ? "visible" : ""}`} aria-label="Fechar sumário" onClick={() => setSidebarOpen(false)} />
       <aside className={`sidebar ${sidebarOpen ? "open" : ""}`} aria-label="Biblioteca e capítulos">
         <div className="brand-row">
@@ -357,6 +416,49 @@ export function BookReader() {
             <div className="font-control" aria-label="Tamanho do texto">
               <button onClick={() => setFontSize((size) => Math.max(16, size - 1))} aria-label="Diminuir texto">A−</button>
               <button onClick={() => setFontSize((size) => Math.min(24, size + 1))} aria-label="Aumentar texto">A＋</button>
+            </div>
+            <div className="appearance-wrap" ref={settingsRef}>
+              <button className={`appearance-trigger ${settingsOpen ? "active" : ""}`} onClick={() => setSettingsOpen((open) => !open)} aria-expanded={settingsOpen} aria-haspopup="dialog">
+                <span>Aa</span><span className="appearance-label">Aparência</span>
+              </button>
+              {settingsOpen && (
+                <div className="appearance-panel" role="dialog" aria-label="Personalizar leitura">
+                  <div className="appearance-heading">
+                    <div><small>Preferências de leitura</small><strong>Aparência</strong></div>
+                    <button onClick={() => setSettingsOpen(false)} aria-label="Fechar personalização">×</button>
+                  </div>
+
+                  <fieldset className="font-picker">
+                    <legend>Fonte</legend>
+                    <div className="font-options">
+                      {FONT_OPTIONS.map((option) => (
+                        <button key={option.id} className={`${option.id} ${fontFamily === option.id ? "selected" : ""}`} onClick={() => setFontFamily(option.id)}>
+                          <span>{option.label}</span><small>{option.detail}</small>
+                        </button>
+                      ))}
+                    </div>
+                  </fieldset>
+
+                  <div className="setting-range">
+                    <label htmlFor="line-height"><span>Altura da linha</span><output>{lineHeight.toFixed(2)}</output></label>
+                    <input id="line-height" type="range" min="1.45" max="2.2" step="0.05" value={lineHeight} onChange={(event) => setLineHeight(Number(event.target.value))} />
+                  </div>
+                  <div className="setting-range">
+                    <label htmlFor="paragraph-margin"><span>Espaço entre parágrafos</span><output>{paragraphMargin.toFixed(2)}×</output></label>
+                    <input id="paragraph-margin" type="range" min="0.75" max="2.2" step="0.05" value={paragraphMargin} onChange={(event) => setParagraphMargin(Number(event.target.value))} />
+                  </div>
+                  <div className="setting-range">
+                    <label htmlFor="side-padding"><span>Margens laterais</span><output>{sidePadding}px</output></label>
+                    <input id="side-padding" type="range" min="18" max="110" step="2" value={sidePadding} onChange={(event) => setSidePadding(Number(event.target.value))} />
+                  </div>
+                  <div className="setting-range">
+                    <label htmlFor="letter-spacing"><span>Espaço entre letras</span><output>{letterSpacing.toFixed(3)}em</output></label>
+                    <input id="letter-spacing" type="range" min="-0.02" max="0.06" step="0.005" value={letterSpacing} onChange={(event) => setLetterSpacing(Number(event.target.value))} />
+                  </div>
+
+                  <button className="reset-appearance" onClick={resetTypography}>Restaurar padrão</button>
+                </div>
+              )}
             </div>
           </div>
         </header>
