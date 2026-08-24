@@ -8,10 +8,24 @@ import {
   useRef,
   useState,
 } from "react";
+import { DUNA_CHAPTER_ONE } from "./duna-chapter-1";
 
 type Chapter = { id: string; title: string; content: string };
 type Book = { id: string; title: string; author: string; chapters: Chapter[] };
 type Theme = "paper" | "sepia" | "dusk";
+
+const DUNA_BOOK: Book = {
+  id: "duna-a-abdicacao",
+  title: "Duna: A Abdicação",
+  author: "1 capítulo disponível",
+  chapters: [
+    {
+      id: "o-peso-das-colheitas",
+      title: "O Peso das Colheitas",
+      content: DUNA_CHAPTER_ONE,
+    },
+  ],
+};
 
 const SAMPLE_BOOK: Book = {
   id: "jardim-silencioso",
@@ -69,6 +83,8 @@ Ela se sentou no degrau, abriu o livro e escreveu a primeira linha:
     },
   ],
 };
+
+const PUBLISHED_BOOKS = [DUNA_BOOK, SAMPLE_BOOK];
 
 function slug(value: string) {
   return value
@@ -143,9 +159,9 @@ function Markdown({ source }: { source: string }) {
 }
 
 export function BookReader() {
-  const [books, setBooks] = useState<Book[]>([SAMPLE_BOOK]);
-  const [bookId, setBookId] = useState(SAMPLE_BOOK.id);
-  const [chapterId, setChapterId] = useState(SAMPLE_BOOK.chapters[0].id);
+  const [books, setBooks] = useState<Book[]>(PUBLISHED_BOOKS);
+  const [bookId, setBookId] = useState(DUNA_BOOK.id);
+  const [chapterId, setChapterId] = useState(DUNA_BOOK.chapters[0].id);
   const [theme, setTheme] = useState<Theme>("paper");
   const [fontSize, setFontSize] = useState(19);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -158,7 +174,8 @@ export function BookReader() {
     try {
       if (stored) {
         const parsed = JSON.parse(stored) as Book[];
-        if (parsed.length) { setBooks(parsed); setBookId(parsed[0].id); setChapterId(parsed[0].chapters[0].id); }
+        const importedBooks = parsed.filter((saved) => !PUBLISHED_BOOKS.some((published) => published.id === saved.id));
+        setBooks([...PUBLISHED_BOOKS, ...importedBooks]);
       }
       if (preferences) {
         const parsed = JSON.parse(preferences);
@@ -167,7 +184,7 @@ export function BookReader() {
         if (parsed.bookId) setBookId(parsed.bookId);
         if (parsed.chapterId) setChapterId(parsed.chapterId);
       }
-    } catch { /* Keep the sample library if saved data is invalid. */ }
+    } catch { /* Keep the published library if saved data is invalid. */ }
     fileRef.current?.setAttribute("webkitdirectory", "");
     setReady(true);
   }, []);
