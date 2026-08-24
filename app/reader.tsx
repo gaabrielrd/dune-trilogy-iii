@@ -135,6 +135,23 @@ function chapterTitle(filename: string, content: string) {
   return heading?.replace(/[*_`]/g, "").trim() || filename.replace(/\.md$/i, "").replace(/^\d+[\s._-]*/, "");
 }
 
+function chapterPreview(source: string) {
+  return source
+    .replace(/\r/g, "")
+    .split(/\n\s*\n/)
+    .filter((block) => !/^\s*#{1,6}\s/.test(block) && !/^\s*---+\s*$/.test(block))
+    .map((block) => block
+      .replace(/^\s*>\s?/gm, "")
+      .replace(/^\s*[-*+]\s+/gm, "")
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+      .replace(/[\*_`]/g, "")
+      .replace(/\s+/g, " ")
+      .trim())
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((text) => text.length > 145 ? `${text.slice(0, 142).trim()}…` : text);
+}
+
 function inline(text: string): ReactNode[] {
   const token = /(\*\*[^*]+\*\*|__[^_]+__|\*[^*]+\*|_[^_]+_|`[^`]+`|\[[^\]]+\]\([^\s)]+\))/g;
   return text.split(token).filter(Boolean).map((part, index) => {
@@ -289,6 +306,7 @@ export function BookReader() {
   const chapterIndex = Math.max(0, book.chapters.findIndex((item) => item.id === chapterId));
   const chapter = book.chapters[chapterIndex] || book.chapters[0];
   const progress = Math.round(((chapterIndex + 1) / book.chapters.length) * 100);
+  const previewParagraphs = chapterPreview(chapter.content);
 
   const rememberCurrentPosition = () => {
     localStorage.setItem("margem-reading-position", JSON.stringify({ bookId: book.id, chapterId: chapter.id, y: Math.round(window.scrollY) }));
@@ -426,6 +444,13 @@ export function BookReader() {
                   <div className="appearance-heading">
                     <div><small>Preferências de leitura</small><strong>Aparência</strong></div>
                     <button onClick={() => setSettingsOpen(false)} aria-label="Fechar personalização">×</button>
+                  </div>
+
+                  <div className="appearance-preview" aria-label="Prévia ao vivo das preferências">
+                    <div className="preview-label"><span>Prévia ao vivo</span><span>{chapter.title}</span></div>
+                    <div className="preview-page">
+                      {previewParagraphs.map((paragraph, index) => <p key={index}>{paragraph}</p>)}
+                    </div>
                   </div>
 
                   <fieldset className="font-picker">

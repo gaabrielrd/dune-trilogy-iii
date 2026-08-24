@@ -67,6 +67,11 @@ button { cursor: pointer; }
 .appearance-heading small { display: block; margin-bottom: 4px; color: var(--muted); font-size: 9px; font-weight: 650; letter-spacing: .1em; text-transform: uppercase; }
 .appearance-heading strong { font-family: var(--font-serif), serif; font-size: 22px; font-weight: 550; }
 .appearance-heading button { width: 28px; height: 28px; padding: 0; background: none; border: 0; color: var(--muted); font-size: 20px; }
+.appearance-preview { margin: 16px 0 4px; background: var(--canvas); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.preview-label { padding: 7px 10px; display: flex; align-items: center; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--line); color: var(--muted); font-family: var(--font-sans), sans-serif; font-size: 8px; font-weight: 650; letter-spacing: .08em; text-transform: uppercase; }
+.preview-label span:last-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 450; letter-spacing: .02em; text-transform: none; }
+.preview-page { max-height: 192px; padding: 14px clamp(8px, calc(var(--reader-padding) * .42), 46px) 8px; overflow: hidden; font-family: var(--reader-font); font-size: var(--reader-size); line-height: var(--reader-line-height); letter-spacing: var(--reader-letter-spacing); transition: padding .12s ease; }
+.preview-page p { margin: 0 0 var(--paragraph-margin); }
 .font-picker { margin: 18px 0 20px; padding: 0; border: 0; }
 .font-picker legend, .setting-range label { color: var(--muted); font-size: 10px; font-weight: 650; letter-spacing: .04em; }
 .font-picker legend { margin-bottom: 9px; }
@@ -154,11 +159,13 @@ button { cursor: pointer; }
   .theme-control { padding-right: 10px; }
   .appearance-label { display: none; }
   .appearance-panel { position: fixed; top: 72px; right: 12px; width: calc(100vw - 24px); max-height: calc(100dvh - 84px); overflow-y: auto; transform-origin: top right; }
+  .appearance-preview { position: sticky; top: -1px; z-index: 2; box-shadow: 0 9px 18px color-mix(in srgb, var(--canvas) 82%, transparent); }
   .page-wrap { padding-block: 45px 28px; }
   .book-page h1 { font-size: 40px; }
   .book-page blockquote { margin-inline: 0; }
   .chapter-nav { grid-template-columns: 1fr; margin-top: 70px; }
   .chapter-nav button + button { border-left: 0; border-top: 1px solid var(--line); }
+  .page-wrap { padding-inline: clamp(18px, calc(var(--reader-padding) * .7), 77px); }
   .resume-card { right: 14px; bottom: 14px; width: calc(100vw - 28px); grid-template-columns: 34px minmax(0, 1fr); padding-right: 38px; }
   .resume-action { grid-column: 2; justify-self: start; }
 }
