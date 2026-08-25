@@ -23,12 +23,12 @@ type Theme = "paper" | "sepia" | "dusk" | "coffee" | "midnight";
 type FontFamily = "lora" | "geist" | "georgia" | "palatino";
 type ReadingPosition = { bookId: string; chapterId: string; y: number };
 
-const THEME_BROWSER_COLORS: Record<Theme, string> = {
-  paper: "#f6f4ef",
-  sepia: "#eee5d4",
-  dusk: "#1b1c1d",
-  coffee: "#e8ded2",
-  midnight: "#111722",
+const THEME_BROWSER_PALETTES: Record<Theme, { canvas: string; paper: string; accent: string; muted: string }> = {
+  paper: { canvas: "#f6f4ef", paper: "#fdfcf8", accent: "#9e3f2f", muted: "#7c7b70" },
+  sepia: { canvas: "#eee5d4", paper: "#f5eddd", accent: "#9a4d2e", muted: "#817360" },
+  dusk: { canvas: "#1b1c1d", paper: "#222426", accent: "#d58470", muted: "#918f89" },
+  coffee: { canvas: "#e8ded2", paper: "#f5eee6", accent: "#9b5c34", muted: "#79675d" },
+  midnight: { canvas: "#111722", paper: "#18212d", accent: "#d09a5b", muted: "#909ca9" },
 };
 
 const FONT_OPTIONS: { id: FontFamily; label: string; detail: string }[] = [
@@ -350,17 +350,21 @@ export function BookReader() {
   }, [books, theme, fontSize, fontFamily, lineHeight, paragraphMargin, sidePadding, letterSpacing, bookId, chapterId, ready]);
 
   useEffect(() => {
-    const color = THEME_BROWSER_COLORS[theme];
+    const palette = THEME_BROWSER_PALETTES[theme];
     let themeColor = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
     if (!themeColor) {
       themeColor = document.createElement("meta");
       themeColor.name = "theme-color";
       document.head.appendChild(themeColor);
     }
-    themeColor.content = color;
-    document.documentElement.style.backgroundColor = color;
+    themeColor.content = palette.canvas;
+    document.documentElement.style.backgroundColor = palette.canvas;
     document.documentElement.style.colorScheme = theme === "dusk" || theme === "midnight" ? "dark" : "light";
-    document.body.style.backgroundColor = color;
+    document.documentElement.style.setProperty("--browser-canvas", palette.canvas);
+    document.documentElement.style.setProperty("--browser-paper", palette.paper);
+    document.documentElement.style.setProperty("--browser-accent", palette.accent);
+    document.documentElement.style.setProperty("--browser-muted", palette.muted);
+    document.body.style.backgroundColor = palette.canvas;
   }, [theme]);
 
   useEffect(() => {

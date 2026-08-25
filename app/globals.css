@@ -1,7 +1,12 @@
 @import "tailwindcss";
 
-:root { color-scheme: light; }
+:root { color-scheme: light; --browser-canvas: #f6f4ef; --browser-paper: #fdfcf8; --browser-accent: #9e3f2f; --browser-muted: #7c7b70; }
 * { box-sizing: border-box; }
+* { scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--browser-accent) 58%, var(--browser-muted)) color-mix(in srgb, var(--browser-canvas) 84%, var(--browser-paper)); }
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-track { background: color-mix(in srgb, var(--browser-canvas) 84%, var(--browser-paper)); }
+*::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--browser-accent) 58%, var(--browser-muted)); border: 3px solid color-mix(in srgb, var(--browser-canvas) 84%, var(--browser-paper)); border-radius: 999px; }
+*::-webkit-scrollbar-thumb:hover { background: color-mix(in srgb, var(--browser-accent) 78%, var(--browser-muted)); }
 html { scroll-behavior: smooth; }
 body { margin: 0; background: #f6f4ef; color: #292923; font-family: var(--font-sans), sans-serif; }
 button, select, input { font: inherit; }
