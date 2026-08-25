@@ -12,6 +12,9 @@ import { DUNA_CHAPTER_ONE } from "./duna-chapter-1";
 import { DUNA_CHAPTER_TWO } from "./duna-chapter-2";
 import { DUNA_CHAPTER_THREE } from "./duna-chapter-3";
 import { DUNA_CHAPTER_FOUR } from "./duna-chapter-4";
+import { DUNA_CHAPTER_FIVE } from "./duna-chapter-5";
+import { DUNA_CHAPTER_SIX } from "./duna-chapter-6";
+import { DUNA_CHAPTER_SEVEN } from "./duna-chapter-7";
 
 type Chapter = { id: string; title: string; content: string };
 type Book = { id: string; title: string; author: string; chapters: Chapter[] };
@@ -36,7 +39,7 @@ const FONT_STACKS: Record<FontFamily, string> = {
 const DUNA_BOOK: Book = {
   id: "duna-a-abdicacao",
   title: "Duna: A Abdicação",
-  author: "4 capítulos disponíveis",
+  author: "7 capítulos disponíveis",
   chapters: [
     {
       id: "o-peso-das-colheitas",
@@ -57,6 +60,21 @@ const DUNA_BOOK: Book = {
       id: "a-moral-dos-numeros",
       title: "A Moral dos Números",
       content: DUNA_CHAPTER_FOUR,
+    },
+    {
+      id: "o-homem-que-disse-nao",
+      title: "O Homem que Disse Não",
+      content: DUNA_CHAPTER_FIVE,
+    },
+    {
+      id: "a-correcao",
+      title: "A Correção",
+      content: DUNA_CHAPTER_SIX,
+    },
+    {
+      id: "um-nome-impossivel",
+      title: "Um Nome Impossível",
+      content: DUNA_CHAPTER_SEVEN,
     },
   ],
 };
