@@ -19,7 +19,7 @@ import { BOOK_ENTITIES, type BookEntity } from "./entities";
 
 type Chapter = { id: string; title: string; content: string };
 type Book = { id: string; title: string; author: string; chapters: Chapter[] };
-type Theme = "paper" | "sepia" | "dusk" | "mist" | "midnight";
+type Theme = "paper" | "sepia" | "dusk" | "coffee" | "midnight";
 type FontFamily = "lora" | "geist" | "georgia" | "palatino";
 type ReadingPosition = { bookId: string; chapterId: string; y: number };
 
@@ -314,7 +314,8 @@ export function BookReader() {
       }
       if (preferences) {
         const parsed = JSON.parse(preferences);
-        if (["paper", "sepia", "dusk", "mist", "midnight"].includes(parsed.theme)) setTheme(parsed.theme);
+        if (parsed.theme === "mist") setTheme("coffee");
+        else if (["paper", "sepia", "dusk", "coffee", "midnight"].includes(parsed.theme)) setTheme(parsed.theme);
         if (parsed.fontSize) setFontSize(parsed.fontSize);
         if (["lora", "geist", "georgia", "palatino"].includes(parsed.fontFamily)) setFontFamily(parsed.fontFamily);
         if (typeof parsed.lineHeight === "number") setLineHeight(parsed.lineHeight);
@@ -454,7 +455,7 @@ export function BookReader() {
     { id: "paper" as const, label: "Claro" },
     { id: "sepia" as const, label: "Sépia" },
     { id: "dusk" as const, label: "Noturno" },
-    { id: "mist" as const, label: "Névoa" },
+    { id: "coffee" as const, label: "Café" },
     { id: "midnight" as const, label: "Meia-noite" },
   ]), []);
 
