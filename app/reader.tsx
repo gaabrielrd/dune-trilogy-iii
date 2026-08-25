@@ -513,10 +513,6 @@ export function BookReader() {
             <div className="theme-control" aria-label="Tema de leitura">
               {themes.map((item) => <button key={item.id} className={theme === item.id ? "selected" : ""} onClick={() => setTheme(item.id)} title={item.label} aria-label={`Tema ${item.label}`}><span className={`swatch ${item.id}`} /></button>)}
             </div>
-            <div className="font-control" aria-label="Tamanho do texto">
-              <button onClick={() => setFontSize((size) => Math.max(16, size - 1))} aria-label="Diminuir texto">A−</button>
-              <button onClick={() => setFontSize((size) => Math.min(24, size + 1))} aria-label="Aumentar texto">A＋</button>
-            </div>
             <button className="guide-trigger" onClick={() => { setGlossaryOpen(true); setSettingsOpen(false); }} aria-haspopup="dialog">
               <span className="guide-symbol">◎</span><span className="guide-label">Pessoas & lugares</span>
             </button>
@@ -536,6 +532,11 @@ export function BookReader() {
                     <div className="preview-page">
                       {previewParagraphs.map((paragraph, index) => <p key={index}>{paragraph}</p>)}
                     </div>
+                  </div>
+
+                  <div className="setting-range">
+                    <label htmlFor="font-size"><span>Tamanho do texto</span><output>{fontSize}px</output></label>
+                    <input id="font-size" type="range" min="16" max="24" step="1" value={fontSize} onChange={(event) => setFontSize(Number(event.target.value))} />
                   </div>
 
                   <fieldset className="font-picker">
