@@ -12,5 +12,10 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="pt-BR"><body className={`${sans.variable} ${serif.variable}`}>{children}</body></html>;
+  return (
+    <html lang="pt-BR">
+      <head><meta name="theme-color" content="#f6f4ef" /></head>
+      <body className={`${sans.variable} ${serif.variable}`}>{children}</body>
+    </html>
+  );
 }

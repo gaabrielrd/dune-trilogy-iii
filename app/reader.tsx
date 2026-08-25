@@ -23,6 +23,14 @@ type Theme = "paper" | "sepia" | "dusk" | "coffee" | "midnight";
 type FontFamily = "lora" | "geist" | "georgia" | "palatino";
 type ReadingPosition = { bookId: string; chapterId: string; y: number };
 
+const THEME_BROWSER_COLORS: Record<Theme, string> = {
+  paper: "#f6f4ef",
+  sepia: "#eee5d4",
+  dusk: "#1b1c1d",
+  coffee: "#e8ded2",
+  midnight: "#111722",
+};
+
 const FONT_OPTIONS: { id: FontFamily; label: string; detail: string }[] = [
   { id: "lora", label: "Lora", detail: "Literária" },
   { id: "geist", label: "Geist", detail: "Contemporânea" },
@@ -340,6 +348,20 @@ export function BookReader() {
     localStorage.setItem("margem-library", JSON.stringify(books));
     localStorage.setItem("margem-preferences", JSON.stringify({ theme, fontSize, fontFamily, lineHeight, paragraphMargin, sidePadding, letterSpacing, bookId, chapterId }));
   }, [books, theme, fontSize, fontFamily, lineHeight, paragraphMargin, sidePadding, letterSpacing, bookId, chapterId, ready]);
+
+  useEffect(() => {
+    const color = THEME_BROWSER_COLORS[theme];
+    let themeColor = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+    if (!themeColor) {
+      themeColor = document.createElement("meta");
+      themeColor.name = "theme-color";
+      document.head.appendChild(themeColor);
+    }
+    themeColor.content = color;
+    document.documentElement.style.backgroundColor = color;
+    document.documentElement.style.colorScheme = theme === "dusk" || theme === "midnight" ? "dark" : "light";
+    document.body.style.backgroundColor = color;
+  }, [theme]);
 
   useEffect(() => {
     if (!settingsOpen) return;
