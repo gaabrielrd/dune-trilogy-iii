@@ -5,7 +5,12 @@ export type BookEntity = {
   aliases: string[];
   summary: string;
   chapters: number[];
+  updates?: { chapter: number; text: string }[];
 };
+
+export function entitySummaryAt(entity: BookEntity, chapter: number) {
+  return [entity.summary, ...(entity.updates || []).filter((update) => update.chapter <= chapter).map((update) => update.text)].join(" ");
+}
 
 export const BOOK_ENTITIES: BookEntity[] = [
   {
@@ -13,16 +18,26 @@ export const BOOK_ENTITIES: BookEntity[] = [
     name: "Soren Vale",
     kind: "Pessoa",
     aliases: ["Soren Vale", "Soren", "Historiador Vale", "Professor Vale"],
-    summary: "Historiador dos Arquivos Centrais. Investiga como decisões, responsabilidade e memória foram transferidas para sistemas preditivos.",
-    chapters: [1, 3, 4, 6, 7],
+    summary: "Historiador dos Arquivos Centrais, atento ao que os registros preservam — e ao que deixam de perguntar.",
+    chapters: [1, 3, 4, 6, 7, 8, 9],
+    updates: [
+      { chapter: 3, text: "Ao reconstruir a decisão de Amon Taris, passa a investigar como certeza, responsabilidade e erro mudam quando vistos em retrospecto." },
+      { chapter: 7, text: "A busca pela origem de Butler o leva a rastrear não só documentos, mas também os critérios que os classificaram." },
+      { chapter: 8, text: "Com Elian Rho, aprende a tratar proveniência como uma cadeia reconstruível de transformações, usando o registro de Merovar como referência." },
+      { chapter: 9, text: "Muda a pergunta sobre Butler: em vez de procurar apenas uma identidade, passa a investigar como séculos de decisões reduziram sua relevância." },
+    ],
   },
   {
     id: "naia-vey",
     name: "Naia Vey",
     kind: "Pessoa",
     aliases: ["Naia Vey", "Naia"],
-    summary: "Curadora rigorosa que transforma valores políticos em critérios auditáveis. Sua amizade intelectual com Soren atravessa décadas.",
-    chapters: [2, 3, 4],
+    summary: "Curadora rigorosa que examina como escolhas técnicas distribuem risco entre pessoas e mundos.",
+    chapters: [2, 3, 4, 9],
+    updates: [
+      { chapter: 3, text: "Sua amizade intelectual com Soren revela uma interlocutora disposta a confrontar as perguntas por trás dos modelos." },
+      { chapter: 4, text: "Ajuda a transformar valores políticos em critérios auditáveis, com limites e responsabilidades explicitados." },
+    ],
   },
   {
     id: "tarek-venn",
@@ -30,7 +45,8 @@ export const BOOK_ENTITIES: BookEntity[] = [
     kind: "Pessoa",
     aliases: ["Tarek Venn", "Tarek"],
     summary: "Jovem oficial da Frota de Coordenação. Em Pelagos, aprende quanto pode custar a liberdade de contrariar uma previsão.",
-    chapters: [5, 6],
+    chapters: [5, 6, 9],
+    updates: [{ chapter: 6, text: "Depois de Pelagos, defende uma preparação progressiva que preserve a possibilidade de contestar previsões sem ignorá-las." }],
   },
   {
     id: "cassian-dhor",
@@ -38,7 +54,8 @@ export const BOOK_ENTITIES: BookEntity[] = [
     kind: "Pessoa",
     aliases: ["Cassian Dhor", "Cassian", "Delegado Dhor"],
     summary: "Delegado de Qelven. Defende as reservas do mundo contra uma seca futura possível e exige que a incerteza também seja considerada.",
-    chapters: [1],
+    chapters: [1, 9],
+    updates: [{ chapter: 9, text: "A solução negociada em torno de Qelven torna-se parte de uma implementação que continua funcionando anos depois." }],
   },
   {
     id: "edrin-sol",
@@ -54,7 +71,8 @@ export const BOOK_ENTITIES: BookEntity[] = [
     kind: "Pessoa",
     aliases: ["Mael Tura", "Mael"],
     summary: "Representante de Ilyr. Protege a autonomia industrial de seu mundo e questiona quando uma emergência vira poder permanente.",
-    chapters: [1],
+    chapters: [1, 9],
+    updates: [{ chapter: 9, text: "A solução que preservou a autonomia de Ilyr integra uma implementação que permanece operacional." }],
   },
   {
     id: "serai-kelm",
@@ -70,7 +88,8 @@ export const BOOK_ENTITIES: BookEntity[] = [
     kind: "Pessoa",
     aliases: ["Tala Orin", "Tala", "Delegada Orin"],
     summary: "Delegada de Maraith. Defende ajuda imediata para uma população já submetida a racionamento e perda de colheitas.",
-    chapters: [1, 6],
+    chapters: [1, 6, 9],
+    updates: [{ chapter: 9, text: "A resposta construída para Maraith é lembrada como parte de uma solução duradoura, ainda sujeita a ajustes humanos." }],
   },
   {
     id: "dara-kett",
@@ -102,7 +121,7 @@ export const BOOK_ENTITIES: BookEntity[] = [
     kind: "Pessoa",
     aliases: ["General Amon Taris", "Amon Taris", "Taris"],
     summary: "General e governador militar de Oros. Sua decisão histórica oferece a Soren um estudo sobre certeza, retrospectiva e erro humano.",
-    chapters: [3],
+    chapters: [3, 9],
   },
   {
     id: "lem-var",
@@ -173,8 +192,12 @@ export const BOOK_ENTITIES: BookEntity[] = [
     name: "Elian Rho",
     kind: "Pessoa",
     aliases: ["Elian Rho", "Elian"],
-    summary: "Especialista em preservação e manutenção de redes históricas. É chamado por Soren para rastrear a genealogia técnica de Butler.",
-    chapters: [7],
+    summary: "Especialista em preservação e manutenção de redes históricas, chamado por Soren para rastrear a genealogia técnica de Butler.",
+    chapters: [7, 8, 9],
+    updates: [
+      { chapter: 8, text: "Mostra que a autenticidade de um documento pode nascer da proveniência verificável, mesmo quando nenhuma versão isolada é o original absoluto." },
+      { chapter: 9, text: "Sua reconstrução de BUTLER-7 ajuda Soren a enxergar a classificação histórica como uma arquitetura acumulada, sem autor único." },
+    ],
   },
   {
     id: "butler",
@@ -182,7 +205,8 @@ export const BOOK_ENTITIES: BookEntity[] = [
     kind: "Pessoa",
     aliases: ["Butler"],
     summary: "Nome de origem indeterminada ligado a uma antiga doutrina de autoria humana. As fontes divergem sobre ser pessoa, grupo ou rótulo posterior.",
-    chapters: [7],
+    chapters: [7, 9],
+    updates: [{ chapter: 9, text: "Mesmo sem uma biografia recuperável, a tradição associada ao nome mostra continuidade conceitual; sua perda de relevância parece resultar de muitas classificações acumuladas, não de uma ordem única." }],
   },
   {
     id: "salusa-secundus",
@@ -190,7 +214,7 @@ export const BOOK_ENTITIES: BookEntity[] = [
     kind: "Lugar",
     aliases: ["Salusa Secundus", "Salusa"],
     summary: "Mundo que abriga os Arquivos Históricos Centrais, infraestrutura de Coordenação e sessões importantes do Conselho.",
-    chapters: [1, 4, 7],
+    chapters: [1, 4, 7, 9],
   },
   {
     id: "qelven",
@@ -198,7 +222,8 @@ export const BOOK_ENTITIES: BookEntity[] = [
     kind: "Lugar",
     aliases: ["Qelven"],
     summary: "Mundo produtor de grãos com grandes reservas, ameaçado por modelos climáticos divergentes sobre uma possível nova seca.",
-    chapters: [1],
+    chapters: [1, 9],
+    updates: [{ chapter: 9, text: "A distribuição negociada de suas reservas integra uma solução que continua funcionando." }],
   },
   {
     id: "ilyr",
@@ -206,7 +231,8 @@ export const BOOK_ENTITIES: BookEntity[] = [
     kind: "Lugar",
     aliases: ["Ilyr"],
     summary: "Mundo industrial capaz de converter linhas de produção para alimentos, mas ligado a cadeias de energia e componentes essenciais.",
-    chapters: [1],
+    chapters: [1, 9],
+    updates: [{ chapter: 9, text: "Sua conversão industrial limitada torna-se parte de uma solução duradoura para a crise." }],
   },
   {
     id: "maraith",
@@ -214,7 +240,8 @@ export const BOOK_ENTITIES: BookEntity[] = [
     kind: "Lugar",
     aliases: ["Maraith"],
     summary: "Mundo atingido por duas colheitas ruins e racionamento, foco imediato da crise de distribuição do Conselho.",
-    chapters: [1],
+    chapters: [1, 9],
+    updates: [{ chapter: 9, text: "A ajuda recebida integra uma implementação que continua operacional, embora ainda exija correções." }],
   },
   {
     id: "vespera",
@@ -222,7 +249,7 @@ export const BOOK_ENTITIES: BookEntity[] = [
     kind: "Lugar",
     aliases: ["Vespera"],
     summary: "Mundo de produção biomédica e grandes corredores logísticos. Seus componentes e sua capacidade de carga conectam crises distantes.",
-    chapters: [1, 5],
+    chapters: [1, 5, 9],
   },
   {
     id: "parem",
@@ -254,7 +281,7 @@ export const BOOK_ENTITIES: BookEntity[] = [
     kind: "Lugar",
     aliases: ["Pelagos"],
     summary: "Mundo de plataformas e infraestrutura móvel onde uma recomendação preventiva é recusada e depois reavaliada.",
-    chapters: [5, 6],
+    chapters: [5, 6, 9],
   },
   {
     id: "hadran",
@@ -287,5 +314,30 @@ export const BOOK_ENTITIES: BookEntity[] = [
     aliases: ["Talassar"],
     summary: "Local onde a preparação progressiva reduz risco sem exigir evacuação, oferecendo um contraponto ao desastre de Namar.",
     chapters: [6],
+  },
+  {
+    id: "merovar",
+    name: "Merovar",
+    kind: "Lugar",
+    aliases: ["Merovar"],
+    summary: "Mundo ligado a uma antiga cessação de atividade, cujos registros preservam disputas comerciais, bloqueios e revisões sucessivas.",
+    chapters: [8, 9],
+    updates: [{ chapter: 9, text: "O caso torna-se uma referência para Soren ao investigar como a proveniência pode sobreviver sem um autor único." }],
+  },
+  {
+    id: "nereth",
+    name: "Nereth",
+    kind: "Lugar",
+    aliases: ["Nereth"],
+    summary: "Local cuja infraestrutura resiliente inspira uma derivação técnica usada para recuperar redundância em uma rede histórica.",
+    chapters: [8],
+  },
+  {
+    id: "kharad",
+    name: "Kharad",
+    kind: "Lugar",
+    aliases: ["Kharad"],
+    summary: "Mundo de origem de uma pesquisadora especializada em escolas jurídicas extintas, consultada na investigação sobre Butler.",
+    chapters: [9],
   },
 ];

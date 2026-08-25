@@ -15,7 +15,9 @@ import { DUNA_CHAPTER_FOUR } from "./duna-chapter-4";
 import { DUNA_CHAPTER_FIVE } from "./duna-chapter-5";
 import { DUNA_CHAPTER_SIX } from "./duna-chapter-6";
 import { DUNA_CHAPTER_SEVEN } from "./duna-chapter-7";
-import { BOOK_ENTITIES, type BookEntity } from "./entities";
+import { DUNA_CHAPTER_EIGHT } from "./duna-chapter-8";
+import { DUNA_CHAPTER_NINE } from "./duna-chapter-9";
+import { BOOK_ENTITIES, entitySummaryAt, type BookEntity } from "./entities";
 
 type Chapter = { id: string; title: string; content: string };
 type Book = { id: string; title: string; author: string; chapters: Chapter[] };
@@ -57,7 +59,7 @@ const ENTITY_PATTERN = new RegExp(
 const DUNA_BOOK: Book = {
   id: "duna-a-abdicacao",
   title: "Duna: A Abdicação",
-  author: "7 capítulos disponíveis",
+  author: "9 capítulos disponíveis",
   chapters: [
     {
       id: "o-peso-das-colheitas",
@@ -93,6 +95,16 @@ const DUNA_BOOK: Book = {
       id: "um-nome-impossivel",
       title: "Um Nome Impossível",
       content: DUNA_CHAPTER_SEVEN,
+    },
+    {
+      id: "ausencia-de-autor",
+      title: "Ausência de Autor",
+      content: DUNA_CHAPTER_EIGHT,
+    },
+    {
+      id: "a-pergunta-errada",
+      title: "A Pergunta Errada",
+      content: DUNA_CHAPTER_NINE,
     },
   ],
 };
@@ -180,7 +192,7 @@ function chapterPreview(source: string) {
       .replace(/^\s*>\s?/gm, "")
       .replace(/^\s*[-*+]\s+/gm, "")
       .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
-      .replace(/[\*_`]/g, "")
+      .replace(/[*_`]/g, "")
       .replace(/\s+/g, " ")
       .trim())
     .filter(Boolean)
@@ -188,63 +200,67 @@ function chapterPreview(source: string) {
     .map((text) => text.length > 145 ? `${text.slice(0, 142).trim()}…` : text);
 }
 
-function EntityProfile({ entity, compact = false }: { entity: BookEntity; compact?: boolean }) {
+function EntityProfile({ entity, unlockedChapter, compact = false }: { entity: BookEntity; unlockedChapter: number; compact?: boolean }) {
+  const visibleChapters = entity.chapters.filter((chapter) => chapter <= unlockedChapter);
+  const summary = entitySummaryAt(entity, unlockedChapter);
   if (compact) {
     return (
       <span className="entity-profile compact">
-        <span className="entity-meta"><span>{entity.kind}</span><span>Cap. {entity.chapters.join(", ")}</span></span>
+        <span className="entity-meta"><span>{entity.kind}</span><span>Cap. {visibleChapters.join(", ")}</span></span>
         <strong>{entity.name}</strong>
-        <span className="entity-summary">{entity.summary}</span>
+        <span className="entity-summary">{summary}</span>
       </span>
     );
   }
   return (
     <article className="entity-profile">
-      <div className="entity-meta"><span>{entity.kind}</span><span>Cap. {entity.chapters.join(", ")}</span></div>
+      <div className="entity-meta"><span>{entity.kind}</span><span>Cap. {visibleChapters.join(", ")}</span></div>
       <strong>{entity.name}</strong>
-      <p>{entity.summary}</p>
+      <p>{summary}</p>
     </article>
   );
 }
 
-function EntityMention({ entity, children }: { entity: BookEntity; children: string }) {
+function EntityMention({ entity, unlockedChapter, children }: { entity: BookEntity; unlockedChapter: number; children: string }) {
+  const visibleChapters = entity.chapters.filter((chapter) => chapter <= unlockedChapter);
+  const summary = entitySummaryAt(entity, unlockedChapter);
   return (
     <span
       className={`entity-mention ${entity.kind === "Lugar" ? "place" : "person"}`}
       tabIndex={0}
       role="button"
-      aria-label={`${entity.name}, ${entity.kind}. ${entity.summary} Capítulos ${entity.chapters.join(", ")}.`}
+      aria-label={`${entity.name}, ${entity.kind}. ${summary} Capítulos ${visibleChapters.join(", ")}.`}
       onClick={(event) => event.currentTarget.focus()}
       onKeyDown={(event) => { if (event.key === "Escape") event.currentTarget.blur(); }}
     >
       {children}
-      <span className="entity-tooltip" aria-hidden="true"><EntityProfile entity={entity} compact /></span>
+      <span className="entity-tooltip" aria-hidden="true"><EntityProfile entity={entity} unlockedChapter={unlockedChapter} compact /></span>
     </span>
   );
 }
 
-function annotateEntities(text: string, keyPrefix: string) {
+function annotateEntities(text: string, keyPrefix: string, unlockedChapter: number) {
   return text.split(ENTITY_PATTERN).filter(Boolean).map((part, index) => {
     const entity = ENTITY_BY_ALIAS.get(part);
     return entity
-      ? <EntityMention key={`${keyPrefix}-${index}`} entity={entity}>{part}</EntityMention>
+      ? <EntityMention key={`${keyPrefix}-${index}`} entity={entity} unlockedChapter={unlockedChapter}>{part}</EntityMention>
       : <Fragment key={`${keyPrefix}-${index}`}>{part}</Fragment>;
   });
 }
 
-function inline(text: string): ReactNode[] {
+function inline(text: string, unlockedChapter: number): ReactNode[] {
   const token = /(\*\*[^*]+\*\*|__[^_]+__|\*[^*]+\*|_[^_]+_|`[^`]+`|\[[^\]]+\]\([^\s)]+\))/g;
   return text.split(token).filter(Boolean).map((part, index) => {
-    if (/^\*\*.*\*\*$/.test(part) || /^__.*__$/.test(part)) return <strong key={index}>{annotateEntities(part.slice(2, -2), `strong-${index}`)}</strong>;
-    if (/^\*.*\*$/.test(part) || /^_.*_$/.test(part)) return <em key={index}>{annotateEntities(part.slice(1, -1), `em-${index}`)}</em>;
+    if (/^\*\*.*\*\*$/.test(part) || /^__.*__$/.test(part)) return <strong key={index}>{annotateEntities(part.slice(2, -2), `strong-${index}`, unlockedChapter)}</strong>;
+    if (/^\*.*\*$/.test(part) || /^_.*_$/.test(part)) return <em key={index}>{annotateEntities(part.slice(1, -1), `em-${index}`, unlockedChapter)}</em>;
     if (/^`.*`$/.test(part)) return <code key={index}>{part.slice(1, -1)}</code>;
     const link = part.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
     if (link) return <a key={index} href={link[2]} target="_blank" rel="noreferrer">{link[1]}</a>;
-    return <Fragment key={index}>{annotateEntities(part, `text-${index}`)}</Fragment>;
+    return <Fragment key={index}>{annotateEntities(part, `text-${index}`, unlockedChapter)}</Fragment>;
   });
 }
 
-function Markdown({ source }: { source: string }) {
+function Markdown({ source, unlockedChapter }: { source: string; unlockedChapter: number }) {
   const lines = source.replace(/\r/g, "").split("\n");
   const nodes: ReactNode[] = [];
   let paragraph: string[] = [];
@@ -252,11 +268,11 @@ function Markdown({ source }: { source: string }) {
   let code: string[] | null = null;
 
   const flushParagraph = () => {
-    if (paragraph.length) nodes.push(<p key={`p-${nodes.length}`}>{inline(paragraph.join(" "))}</p>);
+    if (paragraph.length) nodes.push(<p key={`p-${nodes.length}`}>{inline(paragraph.join(" "), unlockedChapter)}</p>);
     paragraph = [];
   };
   const flushList = () => {
-    if (list.length) nodes.push(<ul key={`l-${nodes.length}`}>{list.map((item, i) => <li key={i}>{inline(item)}</li>)}</ul>);
+    if (list.length) nodes.push(<ul key={`l-${nodes.length}`}>{list.map((item, i) => <li key={i}>{inline(item, unlockedChapter)}</li>)}</ul>);
     list = [];
   };
 
@@ -271,7 +287,7 @@ function Markdown({ source }: { source: string }) {
     const heading = line.match(/^(#{1,4})\s+(.+)$/);
     if (heading) {
       flushParagraph(); flushList();
-      const children = inline(heading[2]);
+      const children = inline(heading[2], unlockedChapter);
       const key = `h-${nodes.length}`;
       if (heading[1].length === 1) nodes.push(<h1 key={key}>{children}</h1>);
       else if (heading[1].length === 2) nodes.push(<h2 key={key}>{children}</h2>);
@@ -279,7 +295,7 @@ function Markdown({ source }: { source: string }) {
       return;
     }
     if (/^---+$/.test(line.trim())) { flushParagraph(); flushList(); nodes.push(<hr key={`r-${nodes.length}`} />); return; }
-    if (line.startsWith("> ")) { flushParagraph(); flushList(); nodes.push(<blockquote key={`q-${nodes.length}`}>{inline(line.slice(2))}</blockquote>); return; }
+    if (line.startsWith("> ")) { flushParagraph(); flushList(); nodes.push(<blockquote key={`q-${nodes.length}`}>{inline(line.slice(2), unlockedChapter)}</blockquote>); return; }
     const item = line.match(/^[-*+]\s+(.+)$/);
     if (item) { flushParagraph(); list.push(item[1]); return; }
     paragraph.push(line.trim());
@@ -305,6 +321,7 @@ export function BookReader() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [ready, setReady] = useState(false);
   const [resumePosition, setResumePosition] = useState<ReadingPosition | null>(null);
+  const [profileProgress, setProfileProgress] = useState<Record<string, number>>({});
   const fileRef = useRef<HTMLInputElement>(null);
   const settingsRef = useRef<HTMLDivElement>(null);
 
@@ -312,12 +329,15 @@ export function BookReader() {
     const stored = localStorage.getItem("margem-library");
     const preferences = localStorage.getItem("margem-preferences");
     const savedPosition = localStorage.getItem("margem-reading-position");
+    const savedProfileProgress = localStorage.getItem("margem-profile-progress");
     try {
       let availableBooks = PUBLISHED_BOOKS;
       if (stored) {
         const parsed = JSON.parse(stored) as Book[];
         const importedBooks = parsed.filter((saved) => !PUBLISHED_BOOKS.some((published) => published.id === saved.id));
         availableBooks = [...PUBLISHED_BOOKS, ...importedBooks];
+        // Persisted client state is intentionally restored after mount.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setBooks(availableBooks);
       }
       if (preferences) {
@@ -338,6 +358,7 @@ export function BookReader() {
         const savedBook = availableBooks.find((item) => item.id === parsed.bookId);
         if (parsed.y > 160 && savedBook?.chapters.some((item) => item.id === parsed.chapterId)) setResumePosition(parsed);
       }
+      if (savedProfileProgress) setProfileProgress(JSON.parse(savedProfileProgress));
     } catch { /* Keep the published library if saved data is invalid. */ }
     fileRef.current?.setAttribute("webkitdirectory", "");
     setReady(true);
@@ -416,6 +437,23 @@ export function BookReader() {
   const chapter = book.chapters[chapterIndex] || book.chapters[0];
   const progress = Math.round(((chapterIndex + 1) / book.chapters.length) * 100);
   const previewParagraphs = chapterPreview(chapter.content);
+  const unlockedChapter = Math.max(profileProgress[DUNA_BOOK.id] || 1, book.id === DUNA_BOOK.id ? chapterIndex + 1 : 1);
+  const visibleEntities = BOOK_ENTITIES.filter((entity) => entity.chapters[0] <= unlockedChapter);
+
+  useEffect(() => {
+    if (!ready || book.id !== DUNA_BOOK.id) return;
+    const timer = window.setTimeout(() => {
+      setProfileProgress((current) => current[DUNA_BOOK.id] >= chapterIndex + 1
+        ? current
+        : { ...current, [DUNA_BOOK.id]: chapterIndex + 1 });
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [ready, book.id, chapterIndex]);
+
+  useEffect(() => {
+    if (!ready || !Object.keys(profileProgress).length) return;
+    localStorage.setItem("margem-profile-progress", JSON.stringify(profileProgress));
+  }, [ready, profileProgress]);
 
   const rememberCurrentPosition = () => {
     localStorage.setItem("margem-reading-position", JSON.stringify({ bookId: book.id, chapterId: chapter.id, y: Math.round(window.scrollY) }));
@@ -615,7 +653,7 @@ export function BookReader() {
         <div className="page-wrap">
           <article className="book-page">
             <div className="eyebrow">{book.title}</div>
-            <Markdown source={chapter.content} />
+            <Markdown source={chapter.content} unlockedChapter={unlockedChapter} />
           </article>
 
           <nav className="chapter-nav" aria-label="Navegação entre capítulos">
@@ -642,12 +680,12 @@ export function BookReader() {
           <div><small>Guia de leitura</small><h2>Pessoas & lugares</h2></div>
           <button onClick={() => setGlossaryOpen(false)} aria-label="Fechar guia">×</button>
         </header>
-        <p className="glossary-intro">Perfis sem antecipações, baseados nos sete capítulos disponíveis.</p>
+        <p className="glossary-intro">Contexto liberado até o capítulo {unlockedChapter}. Novas informações aparecem conforme você avança, sem antecipações.</p>
         {(["Pessoa", "Lugar"] as const).map((kind) => (
           <section className="glossary-section" key={kind}>
-            <div className="glossary-section-title"><span>{kind === "Pessoa" ? "Pessoas" : "Lugares"}</span><span>{BOOK_ENTITIES.filter((entity) => entity.kind === kind).length}</span></div>
+            <div className="glossary-section-title"><span>{kind === "Pessoa" ? "Pessoas" : "Lugares"}</span><span>{visibleEntities.filter((entity) => entity.kind === kind).length}</span></div>
             <div className="glossary-list">
-              {BOOK_ENTITIES.filter((entity) => entity.kind === kind).map((entity) => <EntityProfile key={entity.id} entity={entity} />)}
+              {visibleEntities.filter((entity) => entity.kind === kind).map((entity) => <EntityProfile key={entity.id} entity={entity} unlockedChapter={unlockedChapter} />)}
             </div>
           </section>
         ))}
