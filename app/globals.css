@@ -121,6 +121,7 @@ button { cursor: pointer; }
 .book-page h2 { margin: 55px 0 18px; font-size: 28px; font-weight: 500; line-height: 1.25; letter-spacing: -.02em; }
 .book-page h3 { margin: 42px 0 14px; font-size: 21px; }
 .book-page p { margin: 0 0 var(--paragraph-margin); }
+.book-page > p:first-of-type { display: flow-root; }
 .book-page > p:first-of-type::first-letter { float: left; margin: .08em .1em 0 0; color: var(--accent); font-size: 4.2em; line-height: .75; }
 .book-page blockquote { margin: 42px 8%; padding: 7px 0 7px 27px; border-left: 2px solid var(--accent); color: var(--muted); font-size: 1.08em; font-style: italic; }
 .book-page ul { margin: 25px 0 30px 22px; padding: 0; }
