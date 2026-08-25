@@ -19,7 +19,7 @@ import { BOOK_ENTITIES, type BookEntity } from "./entities";
 
 type Chapter = { id: string; title: string; content: string };
 type Book = { id: string; title: string; author: string; chapters: Chapter[] };
-type Theme = "paper" | "sepia" | "dusk";
+type Theme = "paper" | "sepia" | "dusk" | "mist" | "midnight";
 type FontFamily = "lora" | "geist" | "georgia" | "palatino";
 type ReadingPosition = { bookId: string; chapterId: string; y: number };
 
@@ -314,7 +314,7 @@ export function BookReader() {
       }
       if (preferences) {
         const parsed = JSON.parse(preferences);
-        if (["paper", "sepia", "dusk"].includes(parsed.theme)) setTheme(parsed.theme);
+        if (["paper", "sepia", "dusk", "mist", "midnight"].includes(parsed.theme)) setTheme(parsed.theme);
         if (parsed.fontSize) setFontSize(parsed.fontSize);
         if (["lora", "geist", "georgia", "palatino"].includes(parsed.fontFamily)) setFontFamily(parsed.fontFamily);
         if (typeof parsed.lineHeight === "number") setLineHeight(parsed.lineHeight);
@@ -454,6 +454,8 @@ export function BookReader() {
     { id: "paper" as const, label: "Claro" },
     { id: "sepia" as const, label: "Sépia" },
     { id: "dusk" as const, label: "Noturno" },
+    { id: "mist" as const, label: "Névoa" },
+    { id: "midnight" as const, label: "Meia-noite" },
   ]), []);
 
   if (!book || !chapter) return null;
@@ -510,9 +512,6 @@ export function BookReader() {
           <button className="icon-button menu-button" onClick={() => setSidebarOpen(true)} aria-label="Abrir sumário">☰</button>
           <div className="chapter-position">Capítulo {chapterIndex + 1} <span>de {book.chapters.length}</span></div>
           <div className="reading-controls">
-            <div className="theme-control" aria-label="Tema de leitura">
-              {themes.map((item) => <button key={item.id} className={theme === item.id ? "selected" : ""} onClick={() => setTheme(item.id)} title={item.label} aria-label={`Tema ${item.label}`}><span className={`swatch ${item.id}`} /></button>)}
-            </div>
             <button className="guide-trigger" onClick={() => { setGlossaryOpen(true); setSettingsOpen(false); }} aria-haspopup="dialog">
               <span className="guide-symbol">◎</span><span className="guide-label">Pessoas & lugares</span>
             </button>
@@ -533,6 +532,18 @@ export function BookReader() {
                       {previewParagraphs.map((paragraph, index) => <p key={index}>{paragraph}</p>)}
                     </div>
                   </div>
+
+                  <fieldset className="theme-picker">
+                    <legend>Tema</legend>
+                    <div className="theme-options">
+                      {themes.map((item) => (
+                        <button key={item.id} className={theme === item.id ? "selected" : ""} onClick={() => setTheme(item.id)} aria-pressed={theme === item.id}>
+                          <span className={`theme-sample ${item.id}`}><i /><i /><i /></span>
+                          <span>{item.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </fieldset>
 
                   <div className="setting-range">
                     <label htmlFor="font-size"><span>Tamanho do texto</span><output>{fontSize}px</output></label>
