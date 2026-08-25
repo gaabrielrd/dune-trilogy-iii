@@ -14,7 +14,7 @@ export const BOOK_ENTITIES: BookEntity[] = [
     kind: "Pessoa",
     aliases: ["Soren Vale", "Soren", "Historiador Vale", "Professor Vale"],
     summary: "Historiador dos Arquivos Centrais. Investiga como decisões, responsabilidade e memória foram transferidas para sistemas preditivos.",
-    chapters: [1, 2, 3, 4, 6, 7],
+    chapters: [1, 3, 4, 6, 7],
   },
   {
     id: "naia-vey",
@@ -70,7 +70,7 @@ export const BOOK_ENTITIES: BookEntity[] = [
     kind: "Pessoa",
     aliases: ["Tala Orin", "Tala", "Delegada Orin"],
     summary: "Delegada de Maraith. Defende ajuda imediata para uma população já submetida a racionamento e perda de colheitas.",
-    chapters: [1],
+    chapters: [1, 6],
   },
   {
     id: "dara-kett",
@@ -190,7 +190,7 @@ export const BOOK_ENTITIES: BookEntity[] = [
     kind: "Lugar",
     aliases: ["Salusa Secundus", "Salusa"],
     summary: "Mundo que abriga os Arquivos Históricos Centrais, infraestrutura de Coordenação e sessões importantes do Conselho.",
-    chapters: [1],
+    chapters: [1, 4, 7],
   },
   {
     id: "qelven",
@@ -230,7 +230,7 @@ export const BOOK_ENTITIES: BookEntity[] = [
     kind: "Lugar",
     aliases: ["Parem"],
     summary: "Local afetado por isolamento prolongado, usado por Naia para testar se uma calibração esconde falhas de recuperação.",
-    chapters: [2],
+    chapters: [2, 6],
   },
   {
     id: "neryn",
