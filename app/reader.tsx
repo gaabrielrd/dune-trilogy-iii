@@ -27,7 +27,7 @@ const THEME_BROWSER_PALETTES: Record<Theme, { canvas: string; paper: string; acc
   paper: { canvas: "#f6f4ef", paper: "#fdfcf8", accent: "#9e3f2f", muted: "#7c7b70" },
   sepia: { canvas: "#eee5d4", paper: "#f5eddd", accent: "#9a4d2e", muted: "#817360" },
   dusk: { canvas: "#1b1c1d", paper: "#222426", accent: "#d58470", muted: "#918f89" },
-  coffee: { canvas: "#e8ded2", paper: "#f5eee6", accent: "#9b5c34", muted: "#79675d" },
+  coffee: { canvas: "#2b1d17", paper: "#35241d", accent: "#e08a45", muted: "#b89a84" },
   midnight: { canvas: "#111722", paper: "#18212d", accent: "#d09a5b", muted: "#909ca9" },
 };
 
@@ -359,7 +359,7 @@ export function BookReader() {
     }
     themeColor.content = palette.canvas;
     document.documentElement.style.backgroundColor = palette.canvas;
-    document.documentElement.style.colorScheme = theme === "dusk" || theme === "midnight" ? "dark" : "light";
+    document.documentElement.style.colorScheme = theme === "dusk" || theme === "coffee" || theme === "midnight" ? "dark" : "light";
     document.documentElement.style.setProperty("--browser-canvas", palette.canvas);
     document.documentElement.style.setProperty("--browser-paper", palette.paper);
     document.documentElement.style.setProperty("--browser-accent", palette.accent);
