@@ -15,6 +15,7 @@ import { DUNA_CHAPTER_FOUR } from "./duna-chapter-4";
 import { DUNA_CHAPTER_FIVE } from "./duna-chapter-5";
 import { DUNA_CHAPTER_SIX } from "./duna-chapter-6";
 import { DUNA_CHAPTER_SEVEN } from "./duna-chapter-7";
+import { BOOK_ENTITIES, type BookEntity } from "./entities";
 
 type Chapter = { id: string; title: string; content: string };
 type Book = { id: string; title: string; author: string; chapters: Chapter[] };
@@ -35,6 +36,15 @@ const FONT_STACKS: Record<FontFamily, string> = {
   georgia: "Georgia, 'Times New Roman', serif",
   palatino: "Palatino, 'Palatino Linotype', 'Book Antiqua', serif",
 };
+
+const ENTITY_BY_ALIAS = new Map(BOOK_ENTITIES.flatMap((entity) => entity.aliases.map((alias) => [alias, entity] as const)));
+const ENTITY_PATTERN = new RegExp(
+  `(?<![\\p{L}\\p{N}_])(${[...ENTITY_BY_ALIAS.keys()]
+    .sort((a, b) => b.length - a.length)
+    .map((alias) => alias.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+    .join("|")})(?![\\p{L}\\p{N}_])`,
+  "gu",
+);
 
 const DUNA_BOOK: Book = {
   id: "duna-a-abdicacao",
@@ -170,15 +180,59 @@ function chapterPreview(source: string) {
     .map((text) => text.length > 145 ? `${text.slice(0, 142).trim()}…` : text);
 }
 
+function EntityProfile({ entity, compact = false }: { entity: BookEntity; compact?: boolean }) {
+  if (compact) {
+    return (
+      <span className="entity-profile compact">
+        <span className="entity-meta"><span>{entity.kind}</span><span>Cap. {entity.chapters.join(", ")}</span></span>
+        <strong>{entity.name}</strong>
+        <span className="entity-summary">{entity.summary}</span>
+      </span>
+    );
+  }
+  return (
+    <article className="entity-profile">
+      <div className="entity-meta"><span>{entity.kind}</span><span>Cap. {entity.chapters.join(", ")}</span></div>
+      <strong>{entity.name}</strong>
+      <p>{entity.summary}</p>
+    </article>
+  );
+}
+
+function EntityMention({ entity, children }: { entity: BookEntity; children: string }) {
+  return (
+    <span
+      className={`entity-mention ${entity.kind === "Lugar" ? "place" : "person"}`}
+      tabIndex={0}
+      role="button"
+      aria-label={`${entity.name}, ${entity.kind}. ${entity.summary} Capítulos ${entity.chapters.join(", ")}.`}
+      onClick={(event) => event.currentTarget.focus()}
+      onKeyDown={(event) => { if (event.key === "Escape") event.currentTarget.blur(); }}
+    >
+      {children}
+      <span className="entity-tooltip" aria-hidden="true"><EntityProfile entity={entity} compact /></span>
+    </span>
+  );
+}
+
+function annotateEntities(text: string, keyPrefix: string) {
+  return text.split(ENTITY_PATTERN).filter(Boolean).map((part, index) => {
+    const entity = ENTITY_BY_ALIAS.get(part);
+    return entity
+      ? <EntityMention key={`${keyPrefix}-${index}`} entity={entity}>{part}</EntityMention>
+      : <Fragment key={`${keyPrefix}-${index}`}>{part}</Fragment>;
+  });
+}
+
 function inline(text: string): ReactNode[] {
   const token = /(\*\*[^*]+\*\*|__[^_]+__|\*[^*]+\*|_[^_]+_|`[^`]+`|\[[^\]]+\]\([^\s)]+\))/g;
   return text.split(token).filter(Boolean).map((part, index) => {
-    if (/^\*\*.*\*\*$/.test(part) || /^__.*__$/.test(part)) return <strong key={index}>{part.slice(2, -2)}</strong>;
-    if (/^\*.*\*$/.test(part) || /^_.*_$/.test(part)) return <em key={index}>{part.slice(1, -1)}</em>;
+    if (/^\*\*.*\*\*$/.test(part) || /^__.*__$/.test(part)) return <strong key={index}>{annotateEntities(part.slice(2, -2), `strong-${index}`)}</strong>;
+    if (/^\*.*\*$/.test(part) || /^_.*_$/.test(part)) return <em key={index}>{annotateEntities(part.slice(1, -1), `em-${index}`)}</em>;
     if (/^`.*`$/.test(part)) return <code key={index}>{part.slice(1, -1)}</code>;
     const link = part.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
     if (link) return <a key={index} href={link[2]} target="_blank" rel="noreferrer">{link[1]}</a>;
-    return <Fragment key={index}>{part}</Fragment>;
+    return <Fragment key={index}>{annotateEntities(part, `text-${index}`)}</Fragment>;
   });
 }
 
@@ -239,6 +293,7 @@ export function BookReader() {
   const [sidePadding, setSidePadding] = useState(56);
   const [letterSpacing, setLetterSpacing] = useState(0);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [glossaryOpen, setGlossaryOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [ready, setReady] = useState(false);
   const [resumePosition, setResumePosition] = useState<ReadingPosition | null>(null);
@@ -300,6 +355,15 @@ export function BookReader() {
       window.removeEventListener("keydown", closeOnEscape);
     };
   }, [settingsOpen]);
+
+  useEffect(() => {
+    if (!glossaryOpen) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setGlossaryOpen(false);
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [glossaryOpen]);
 
   useEffect(() => {
     if (!ready) return;
@@ -453,6 +517,9 @@ export function BookReader() {
               <button onClick={() => setFontSize((size) => Math.max(16, size - 1))} aria-label="Diminuir texto">A−</button>
               <button onClick={() => setFontSize((size) => Math.min(24, size + 1))} aria-label="Aumentar texto">A＋</button>
             </div>
+            <button className="guide-trigger" onClick={() => { setGlossaryOpen(true); setSettingsOpen(false); }} aria-haspopup="dialog">
+              <span className="guide-symbol">◎</span><span className="guide-label">Pessoas & lugares</span>
+            </button>
             <div className="appearance-wrap" ref={settingsRef}>
               <button className={`appearance-trigger ${settingsOpen ? "active" : ""}`} onClick={() => setSettingsOpen((open) => !open)} aria-expanded={settingsOpen} aria-haspopup="dialog">
                 <span>Aa</span><span className="appearance-label">Aparência</span>
@@ -530,6 +597,22 @@ export function BookReader() {
           <button className="resume-dismiss" onClick={() => setResumePosition(null)} aria-label="Agora não">×</button>
         </aside>
       )}
+      <button className={`glossary-backdrop ${glossaryOpen ? "visible" : ""}`} aria-label="Fechar pessoas e lugares" onClick={() => setGlossaryOpen(false)} />
+      <aside className={`glossary-drawer ${glossaryOpen ? "open" : ""}`} role="dialog" aria-modal="true" aria-label="Pessoas e lugares de Duna: A Abdicação" aria-hidden={!glossaryOpen}>
+        <header className="glossary-header">
+          <div><small>Guia de leitura</small><h2>Pessoas & lugares</h2></div>
+          <button onClick={() => setGlossaryOpen(false)} aria-label="Fechar guia">×</button>
+        </header>
+        <p className="glossary-intro">Perfis sem antecipações, baseados nos sete capítulos disponíveis.</p>
+        {(["Pessoa", "Lugar"] as const).map((kind) => (
+          <section className="glossary-section" key={kind}>
+            <div className="glossary-section-title"><span>{kind === "Pessoa" ? "Pessoas" : "Lugares"}</span><span>{BOOK_ENTITIES.filter((entity) => entity.kind === kind).length}</span></div>
+            <div className="glossary-list">
+              {BOOK_ENTITIES.filter((entity) => entity.kind === kind).map((entity) => <EntityProfile key={entity.id} entity={entity} />)}
+            </div>
+          </section>
+        ))}
+      </aside>
     </main>
   );
 }
